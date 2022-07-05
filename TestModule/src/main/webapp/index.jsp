@@ -1,4 +1,4 @@
-<%@ taglib uri="WEB-INF/jsp_table.tld" prefix="t" %>  
+<%@ taglib uri="uz.app.jsp.Table.Tags" prefix="t" %>  
 <html>
 <body>
 <h2>Hello World!</h2>
