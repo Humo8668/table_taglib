@@ -3,10 +3,5 @@
  "https://java.sun.com/dtd/web-app_2_3.dtd" >
 
 <web-app>
-  <!--<taglib>
-    <taglib-uri>uz.app.jsp.Table.Tags</taglib-uri>
-    <taglib-location>jsp_table.tld</taglib-location>
-  </taglib>-->
-
   <display-name>Archetype Created Web Application</display-name>
 </web-app>

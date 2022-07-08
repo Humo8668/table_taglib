@@ -10,5 +10,48 @@
     <tag>
         <name>table</name>
         <tag-class>uz.app.jsp.Table.Tags.TableTag</tag-class>
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>dataJson</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!--
+            <info>JSON-string on specified format</info>
+            <example>{'rows': [{'column_A': 'asd', 'column_B': 1}, {'column_A': 'qwe', 'column_C': 2}, {'column_A': 'zxc', 'column_B': 2, 'column_C': 754}]}</example>
+            -->
+        </attribute>
+    </tag>
+
+    <tag>
+        <name>column</name>
+        <tag-class>uz.app.jsp.Table.Tags.ColumnTag</tag-class>
+
+        <attribute>
+            <name>name</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <attribute>
+            <name>orderValue</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <attribute>
+            <name>label</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <attribute>
+            <name>show</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
     </tag>
 </taglib>
