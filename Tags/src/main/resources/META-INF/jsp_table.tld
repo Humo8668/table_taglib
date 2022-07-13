@@ -24,6 +24,13 @@
             <example>{'rows': [{'column_A': 'asd', 'column_B': 1}, {'column_A': 'qwe', 'column_C': 2}, {'column_A': 'zxc', 'column_B': 2, 'column_C': 754}]}</example>
             -->
         </attribute>
+        
+        <attribute>
+            <name>caption</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!--<info>A little caption on the bottom of table.</info>-->
+        </attribute>
     </tag>
 
     <tag>
@@ -34,6 +41,23 @@
             <name>name</name>
             <required>true</required>
             <rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <attribute>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!-- types: string, number-->
+        </attribute>
+
+        <attribute>
+            <name>format</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!--
+                Default formatting for type "number" is " |.|2"
+                    what means grouping separator symbol is <space>, decimal separator symbol is dot and round the number up to one hundredth
+            -->
         </attribute>
 
         <attribute>

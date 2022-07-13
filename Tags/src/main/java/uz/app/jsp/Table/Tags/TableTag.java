@@ -15,6 +15,8 @@ public class TableTag extends BodyTagSupport {
 
     private String tableName;
     private String dataJson;
+    private String caption;
+
     private Table table;
     
     public void setPageContext(PageContext pageContext) {
@@ -28,15 +30,19 @@ public class TableTag extends BodyTagSupport {
     }
 
     public int doStartTag() {
+        List<Table> tables = (List<Table>)pageContext.getAttribute(TABLES_LIST);
+        if(tables.stream().anyMatch((t) -> t.getName().equals(this.getName())))
+            throw new RuntimeException("Duplicate name of table <"+ this.getName() +">");
+
         this.table = new Table(this.getName());
         this.table.setDataJson(this.dataJson);
-        List<Table> tables = (List<Table>)pageContext.getAttribute(TABLES_LIST);
+        this.table.setCaption(this.caption);
         tables.add(this.table);
 
         JspWriter out = pageContext.getOut();//returns the instance of JspWriter  
         try{
-            out.print("<link rel=\"stylesheet\" href=\"css/bootstrap.min.css\">");
-            out.print("<script type=\"text/javascript\" src=\"js/bootstrap.min.js\"></script>");
+            out.print("<link rel=\"stylesheet\" href=\""+pageContext.getRequest().getServletContext().getContextPath()+"/css/bootstrap.min.css\">");
+            out.print("<script type=\"text/javascript\" src=\""+pageContext.getRequest().getServletContext().getContextPath()+"/js/bootstrap.min.js\"></script>");
             // ***************************************************************************
             out.print("<table class=\"table table-striped table-bordered table-hover table-sm\" >");
 
@@ -53,35 +59,51 @@ public class TableTag extends BodyTagSupport {
                             (o1.getOrderValue() == o2.getOrderValue())? 0 : 1
             );
             
-            out.print("<thead class=\"thead-dark\">");
-            out.print("<tr>");
-            out.print("<th scope=\"col\">#</th>");
+            if(this.table.getCaption() != null) {
+                out.append("<caption>"+this.table.getCaption()+"</caption>");
+            }
+            out.append("<thead class=\"thead-dark\">");
+            out.append("<tr>");
+            out.append("<th scope=\"col\">#</th>");
             for (Column column: showableColumns) {
-                out.print("<th scope=\"col\">"+column.getLabel()+"</th>");
+                out.append("<th scope=\"col\">"+column.getLabel()+"</th>");
             }
             
-            out.print("</tr>");
-            out.print("</thead>");
+            out.append("</tr>");
+            out.append("</thead>");
             
             int rowNumeration = 1;
-            out.print("<tbody>");
+            out.append("<tbody>");
 
             List<Map<String, Object>> rowsData = this.table.getRows();
             Iterator<Map<String, Object>> rowIterator = rowsData.iterator();
-            Map<String,Object> rowObject;
-            while(rowIterator.hasNext()) {
-                rowObject = rowIterator.next();
-                out.print("<tr>");
-                out.print("<td>"+rowNumeration+"</td>");
-                for (Column column : showableColumns) {
-                    out.print("<td>"+rowObject.getOrDefault(column.getName(), "<no data>")+"</td>");
+            // if there's no any data, then print row with "no data" text.
+            if(!rowIterator.hasNext()) { 
+                out.append("<tr>");
+                out.append("<td align=\"center\" colspan='100%'>(No data)</td>");
+                out.append("</tr>");
+            } else {
+                Map<String,Object> rowObject;
+                while(rowIterator.hasNext()) {
+                    rowObject = rowIterator.next();
+                    out.append("<tr>");
+                    out.append("<td>"+rowNumeration+"</td>");
+                    for (Column column : showableColumns) {
+                        String formattedValue = column.formatValue(rowObject.getOrDefault(column.getName(), "").toString());
+                        out.append("<td>"+formattedValue+"</td>");
+                    }
+                    out.append("</tr>");
+                    rowNumeration++;
                 }
-                out.print("</tr>");
-                rowNumeration++;
             }
-            out.print("</tbody>");
-            out.print("</table>");
-        }catch(Exception e){System.out.println(e);}  
+            
+            out.append("</tbody>");
+            out.append("</table>");
+            
+            out.flush();
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }  
         return EVAL_PAGE;
     }
 
@@ -99,5 +121,9 @@ public class TableTag extends BodyTagSupport {
 
     public void setDataJson(String jsonStr) {
         this.dataJson = jsonStr;
+    }
+    
+    public void setCaption(String caption) {
+        this.caption = caption;
     }
 }

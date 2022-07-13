@@ -50,4 +50,12 @@ public class ColumnTag extends TagSupport {
     public void setLabel(String label) {
         this.column.setLabel(label);
     }
+    
+    public void setType(String type) {
+        this.column.setType(type);
+    }
+
+    public void setFormat(String format) {
+        this.column.setFormat(format);
+    }
 }

@@ -13,6 +13,9 @@ public class Table {
     private List<Column> columns;
     private String name;
     private String dataJson;
+    private String caption;
+
+
     private Gson jsonParser;
     private List<Map<String, Object>> rowsData;
 
@@ -43,6 +46,10 @@ public class Table {
     }
 
     public void setDataJson(String dataJson) {
+        if(dataJson == null) {
+            this.rowsData = new LinkedList<>();
+            return;
+        }
         this.dataJson = dataJson;
         if(jsonParser == null) 
             return;
@@ -56,5 +63,11 @@ public class Table {
 
     protected List<Map<String, Object>> getRows() {
         return new LinkedList<>(this.rowsData);
+    }
+    public void setCaption(String caption) {
+        this.caption = caption;
+    }
+    public String getCaption() {
+        return caption;
     }
 }
