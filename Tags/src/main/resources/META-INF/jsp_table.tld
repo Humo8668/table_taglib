@@ -24,6 +24,15 @@
             <example>{'rows': [{'column_A': 'asd', 'column_B': 1}, {'column_A': 'qwe', 'column_C': 2}, {'column_A': 'zxc', 'column_B': 2, 'column_C': 754}]}</example>
             -->
         </attribute>
+        <attribute>
+            <name>dataStoreClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!--
+            <info>URL of endpoint to request data</info>
+            -->
+        </attribute>
+        
         
         <attribute>
             <name>caption</name>

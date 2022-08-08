@@ -20,11 +20,12 @@
     </div>
 
     <div style="width: 600px; margin: auto;">
-        <t:table name="third_table" caption="third table">
-            <t:column name="name" orderValue="1" label="Employee name" show="true" />
-            <t:column name="age" orderValue="2" type="number" label="Age" format=" |.|0" show="true" />
-            <t:column name="account_sum" orderValue="4" type="number" label="Amount of money in account" show="true" />
-            <t:column name="is_alive" orderValue="3" label="Is alive" show="true" />
+        <t:table name="employee_table" caption="Employees" dataStoreClass="uz.app.jsp.Table.TestModule.EmployeeDataStore">
+            <t:column name="id" orderValue="1" label="Employee ID" show="true" />
+            <t:column name="name" orderValue="2" label="Name" show="true" />
+            <t:column name="depId" orderValue="4" type="number" label="Department ID" show="true" />
+            <t:column name="postId" orderValue="3" type="number" label="Post ID" show="true" />
+            <t:column name="salary" orderValue="5" type="number" label="Salary" show="true" />
         </t:table>
     </div>
 </body>

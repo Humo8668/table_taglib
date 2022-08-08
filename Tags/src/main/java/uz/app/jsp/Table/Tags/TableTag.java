@@ -16,6 +16,10 @@ public class TableTag extends BodyTagSupport {
     private String tableName;
     private String dataJson;
     private String caption;
+    private String dataSourceUrl;
+    private String dataStoreClass;
+
+    
 
     private Table table;
     
@@ -30,6 +34,7 @@ public class TableTag extends BodyTagSupport {
     }
 
     public int doStartTag() {
+        JspWriter out = pageContext.getOut();//returns the instance of JspWriter  
         List<Table> tables = (List<Table>)pageContext.getAttribute(TABLES_LIST);
         if(tables.stream().anyMatch((t) -> t.getName().equals(this.getName())))
             throw new RuntimeException("Duplicate name of table <"+ this.getName() +">");
@@ -37,9 +42,14 @@ public class TableTag extends BodyTagSupport {
         this.table = new Table(this.getName());
         this.table.setDataJson(this.dataJson);
         this.table.setCaption(this.caption);
+        try {
+            this.table.setDataStoreClass(this.dataStoreClass);
+        } catch (ClassNotFoundException e1) {
+            throw new RuntimeException(e1);
+        }
+
         tables.add(this.table);
 
-        JspWriter out = pageContext.getOut();//returns the instance of JspWriter  
         try{
             out.print("<link rel=\"stylesheet\" href=\""+pageContext.getRequest().getServletContext().getContextPath()+"/css/bootstrap.min.css\">");
             out.print("<script type=\"text/javascript\" src=\""+pageContext.getRequest().getServletContext().getContextPath()+"/js/bootstrap.min.js\"></script>");
@@ -75,7 +85,7 @@ public class TableTag extends BodyTagSupport {
             int rowNumeration = 1;
             out.append("<tbody>");
 
-            List<Map<String, Object>> rowsData = this.table.getRows();
+            Iterable<Map<String, Object>> rowsData = this.table.getRows(20, 1);
             Iterator<Map<String, Object>> rowIterator = rowsData.iterator();
             // if there's no any data, then print row with "no data" text.
             if(!rowIterator.hasNext()) { 
@@ -125,5 +135,17 @@ public class TableTag extends BodyTagSupport {
     
     public void setCaption(String caption) {
         this.caption = caption;
+    }
+    
+    public void setDataSourceUrl(String dataSourceUrl) {
+        if(dataSourceUrl == null)
+            return;
+        this.dataSourceUrl = dataSourceUrl;
+    }
+
+    public void setDataStoreClass(String className) {
+        if(className == null)
+            return;
+        this.dataStoreClass = className;
     }
 }
