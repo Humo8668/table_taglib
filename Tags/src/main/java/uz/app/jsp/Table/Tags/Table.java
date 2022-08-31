@@ -21,6 +21,7 @@ public class Table {
     private String caption;
     private String dataSourceClass;
     private DataStore dataStore;
+    private boolean hasNumeration = false;
 
     private Gson jsonParser;
 
@@ -43,7 +44,10 @@ public class Table {
     }
 
     public List<Column> getShowableColumns() {
-        return this.columns.stream().filter((t) -> t.isShowColumn()).collect(Collectors.toList());
+        return this.columns.stream()
+            .filter((t) -> t.isShowColumn())
+            .sorted((o1, o2) -> (o1.getOrderValue() < o2.getOrderValue())? -1: (o1.getOrderValue() == o2.getOrderValue())? 0 : 1)
+            .collect(Collectors.toList());
     }
 
     public String getName() {
@@ -101,4 +105,11 @@ public class Table {
         return dataSourceClass;
     }
     
+    public void setNumeration(boolean hasNumeration) {
+        this.hasNumeration = hasNumeration;
+    }
+    
+    public boolean hasNumeration() {
+        return this.hasNumeration;
+    }
 }

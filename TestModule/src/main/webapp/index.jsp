@@ -20,7 +20,7 @@
     </div>
 
     <div style="width: 600px; margin: auto;">
-        <t:table name="employee_table" caption="Employees" dataStoreClass="uz.app.jsp.Table.TestModule.EmployeeDataStore">
+        <t:table name="employee_table" caption="Employees" dataStoreClass="uz.app.jsp.Table.TestModule.EmployeeDataStore" numeration="true">
             <t:column name="id" orderValue="1" label="Employee ID" show="true" />
             <t:column name="name" orderValue="2" label="Name" show="true" />
             <t:column name="depId" orderValue="4" type="number" label="Department ID" show="true" />

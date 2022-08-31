@@ -32,13 +32,17 @@
             <info>URL of endpoint to request data</info>
             -->
         </attribute>
-        
-        
         <attribute>
             <name>caption</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
             <!--<info>A little caption on the bottom of table.</info>-->
+        </attribute>
+        <attribute>
+            <name>numeration</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!--<info>The numeration next to each row.</info>-->
         </attribute>
     </tag>
 
