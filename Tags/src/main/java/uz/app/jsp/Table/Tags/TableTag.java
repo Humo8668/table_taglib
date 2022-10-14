@@ -1,19 +1,24 @@
 package uz.app.jsp.Table.Tags;
 
-import java.util.Iterator;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.regex.PatternSyntaxException;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
 
 public class TableTag extends BodyTagSupport {
-    public static final String TABLES_LIST = "TABLES_LIST";
-    public static final int DEFAULT_NUMBER_OF_ROWS_IN_PAGE = 20;
-    public static final int DEFAULT_PAGE_NUMBER = 1;
+    static final String TABLES_LIST = "TABLES_LIST";
+    static final int DEFAULT_NUMBER_OF_ROWS_IN_PAGE = 20;
+    static final int DEFAULT_PAGE_NUMBER = 1;
 
     private String tableName;
     private String dataJson;
@@ -21,8 +26,13 @@ public class TableTag extends BodyTagSupport {
     private String dataSourceUrl;
     private String dataStoreClass;
     private boolean hasNumeration = false;
+    private int activePageNumber = DEFAULT_PAGE_NUMBER;
+    private int rowsInPage = DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
 
     private Table table;
+    private ServletRequest request;
+    private ServletResponse response;
+    private HttpSession session;
     
     public void setPageContext(PageContext pageContext) {
         super.setPageContext(pageContext);
@@ -31,7 +41,33 @@ public class TableTag extends BodyTagSupport {
             tables = new LinkedList<Table>();
             pageContext.setAttribute(TABLES_LIST, tables);
         }
+        this.request = pageContext.getRequest();
+        this.response = pageContext.getResponse();
+        this.session = pageContext.getSession();
+    }
+
+    private void initArguments() {
+        String tableArgumentsStr = this.request.getParameter(this.tableName);
+        if(tableArgumentsStr == null || "".equals(tableArgumentsStr)) {
+            String key_tableArgsInSession = "table_" + this.tableName;
+            Object tableArgumentsInSession = this.session.getAttribute(key_tableArgsInSession);
+            if(tableArgumentsInSession != null && tableArgumentsInSession instanceof String) {
+                tableArgumentsStr = tableArgumentsInSession.toString();
+            } else {
+                tableArgumentsStr = DEFAULT_PAGE_NUMBER + ";" + DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
+            }
+        }
         
+        try {
+            String[] tableArguments = tableArgumentsStr.split(";");
+            this.activePageNumber = Integer.valueOf(tableArguments[0]);
+            this.rowsInPage = Integer.valueOf(tableArguments[1]);
+        } catch(NumberFormatException | PatternSyntaxException ex) {
+            this.activePageNumber = DEFAULT_PAGE_NUMBER;
+            this.rowsInPage = DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
+            tableArgumentsStr = DEFAULT_PAGE_NUMBER + ";" + DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
+        }
+        this.session.setAttribute("table_" + this.tableName, tableArgumentsStr);
     }
 
     private void initTableAttributes() {
@@ -44,18 +80,30 @@ public class TableTag extends BodyTagSupport {
         } catch (ClassNotFoundException e1) {
             throw new RuntimeException(e1);
         }
+
+        initArguments();
     }
 
-    private int getCurrentPageNumber() {
-        return DEFAULT_PAGE_NUMBER;
+    private int getCurrentActivePage() {
+        return this.activePageNumber;
     }
 
     private int getCurrentRowsNumberInPage() {
-        return DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
+        return this.rowsInPage;
+    }
+
+    private int getCurrentPagesCount() {
+        int overall = table.getOverallRowsCount();
+        return overall / this.rowsInPage + ((overall % this.rowsInPage != 0)?1:0);
     }
 
     public int doStartTag() {
         JspWriter out = pageContext.getOut();//returns the instance of JspWriter  
+        try {
+            out.flush();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
         List<Table> tables = (List<Table>)pageContext.getAttribute(TABLES_LIST);
         if(tables.stream().anyMatch((t) -> t.getName().equals(this.getName())))
             throw new RuntimeException("Duplicate name of table <"+ this.getName() +">");
@@ -65,71 +113,34 @@ public class TableTag extends BodyTagSupport {
         return EVAL_BODY_INCLUDE;
     }
 
+    private void includeTableTemplate() {
+        final String LOCALHOST = "http://127.0.0.1:3500";
+        final String TEMPLATE_URL = "/templates/TableTemplate.jsp";
+
+        RequestDispatcher rd = pageContext.getServletContext().getRequestDispatcher(TEMPLATE_URL);
+        request.setAttribute("table", this.table);
+        request.setAttribute("pages_count", getCurrentPagesCount());
+        request.setAttribute("active_page", getCurrentActivePage());
+        request.setAttribute("rows_in_page", getCurrentRowsNumberInPage());
+        request.setAttribute("overall_rows", this.getTable().getOverallRowsCount());
+        try {
+            rd.include(request, response);
+        } catch (ServletException | IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+ 
+    private void printTable(JspWriter out) throws IOException {
+        includeTableTemplate();
+    }
+
     public int doEndTag() {
         JspWriter out = pageContext.getOut();//returns the instance of JspWriter
         try{
-            List<Column> showableColumns = this.table.getShowableColumns(); // columns list sorted by order value
-            /*showableColumns.sort(
-                (o1, o2) -> (o1.getOrderValue() < o2.getOrderValue())? -1:
-                            (o1.getOrderValue() == o2.getOrderValue())? 0 : 1
-            );*/
-            out.append("<link rel=\"stylesheet\" href=\""+pageContext.getRequest().getServletContext().getContextPath()+"/css/bootstrap.min.css\">");
-            out.append("<script type=\"text/javascript\" src=\""+pageContext.getRequest().getServletContext().getContextPath()+"/js/bootstrap.min.js\"></script>");
-            // ***************************************************************************
-            
-
-            out.append("<table class=\"table table-striped table-bordered table-hover table-sm\" >");
-            if(this.table.getCaption() != null) {
-                out.append("<caption>"+this.table.getCaption()+"</caption>");
-            }
-            out.append("<thead class=\"thead-dark\">");
-            out.append("<tr>");
-            if(this.table.hasNumeration()) {
-                out.append("<th scope=\"col\">#</th>");
-            }
-            for (Column column: showableColumns) {
-                out.append("<th scope=\"col\">"+column.getLabel()+"</th>");
-            }
-            
-            out.append("</tr>");
-            out.append("</thead>");
-            
-            int rowNumeration = 1;
-            out.append("<tbody>");
-
-            int currentPage = getCurrentPageNumber();
-            int rowsNumberInPage = getCurrentRowsNumberInPage();
-            Iterable<Map<String, Object>> rowsData = this.table.getRows(rowsNumberInPage, currentPage);
-            Iterator<Map<String, Object>> rowIterator = rowsData.iterator();
-            // if there's no any data, then print row with "no data" text.
-            if(!rowIterator.hasNext()) { 
-                out.append("<tr>");
-                out.append("<td align=\"center\" colspan='100%'>(No data)</td>");
-                out.append("</tr>");
-            } else {
-                Map<String,Object> rowObject;
-                while(rowIterator.hasNext()) {
-                    rowObject = rowIterator.next();
-                    out.append("<tr>");
-                    if(this.table.hasNumeration()) {
-                        out.append("<td>"+rowNumeration+"</td>");
-                    }
-                    for (Column column : showableColumns) {
-                        String formattedValue = column.formatValue(rowObject.getOrDefault(column.getName(), "").toString());
-                        out.append("<td>"+formattedValue+"</td>");
-                    }
-                    out.append("</tr>");
-                    rowNumeration++;
-                }
-            }
-            
-            out.append("</tbody>");
-            out.append("</table>");
-            
-            out.flush();
+            printTable(out);
         }catch(Exception e){
             throw new RuntimeException(e);
-        }  
+        }
         return EVAL_PAGE;
     }
 

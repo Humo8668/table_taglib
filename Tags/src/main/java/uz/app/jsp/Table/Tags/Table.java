@@ -67,11 +67,14 @@ public class Table {
         if(!parsedData.containsKey("rows"))
             throw new RuntimeException("Invalid json format for parsing to table-data");
 
-        this.dataStore = new DefaultDataStore((Collection<Map<String, Object>>)parsedData.get("rows"));
+        this.dataStore = new DefaultDataStore((List<Map<String, Object>>)parsedData.get("rows"));
     }
 
-    protected Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
+    public Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
         return this.dataStore.getRows(rowsInPage, pageNum);
+    }
+    public int getOverallRowsCount() {
+        return this.dataStore.getRowsCount();
     }
     public void setCaption(String caption) {
         this.caption = caption;

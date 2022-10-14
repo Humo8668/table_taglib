@@ -21,7 +21,7 @@
             <rtexprvalue>true</rtexprvalue>
             <!--
             <info>JSON-string on specified format</info>
-            <example>{'rows': [{'column_A': 'asd', 'column_B': 1}, {'column_A': 'qwe', 'column_C': 2}, {'column_A': 'zxc', 'column_B': 2, 'column_C': 754}]}</example>
+            <example>{'rows': [{'column_A': 'asd', 'column_B': 1}, {'column_A': 'col_a', 'column_C': 2}, {'column_A': 'zxc', 'column_B': 2, 'column_C': 754}]}</example>
             -->
         </attribute>
         <attribute>
@@ -54,13 +54,14 @@
             <name>name</name>
             <required>true</required>
             <rtexprvalue>true</rtexprvalue>
+            <!-- Name (also identifier) of column -->
         </attribute>
 
         <attribute>
             <name>type</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
-            <!-- types: string, number-->
+            <!-- Type of colunm values. Example: string, number-->
         </attribute>
 
         <attribute>
@@ -77,16 +78,25 @@
             <name>orderValue</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
+            <!-- Some value for ordering the columns -->
         </attribute>
 
         <attribute>
             <name>label</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
+            <!-- The showing name of column. -->
         </attribute>
 
         <attribute>
             <name>show</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <!-- Does It show this column on page or this is hidden column - only for data storing purposes -->
+        </attribute>
+
+        <attribute>
+            <name>order</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>

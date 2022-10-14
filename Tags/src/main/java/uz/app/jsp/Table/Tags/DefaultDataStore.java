@@ -2,24 +2,25 @@ package uz.app.jsp.Table.Tags;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import uz.app.jsp.Table.DataStore;
 
 class DefaultDataStore implements DataStore {
-    Collection<Map<String, Object>> rows;
+    List<Map<String, Object>> rows;
     
-    public DefaultDataStore(Collection<Map<String, Object>> allRows) {
+    public DefaultDataStore(List<Map<String, Object>> allRows) {
         this.rows = new LinkedList<>(allRows);
     }
 
     @Override
-    public Collection<Map<String, Object>> getAllRows() {
+    public List<Map<String, Object>> getAllRows() {
         return this.rows;
     }
 
     @Override
-    public Collection<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
+    public List<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
         if(rowsInPage <= 0)
             throw new IllegalArgumentException("Count of rows in page must be greater than zero");
         if(pageNum <= 0) {
