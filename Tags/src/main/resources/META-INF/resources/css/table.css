@@ -6,3 +6,8 @@
 table.table tr.active {
 	background-color: #aad0ff;
 }
+
+table.table th:hover {
+	background-color: #4a4a4a;
+	cursor: pointer;
+}

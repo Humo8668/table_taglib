@@ -100,14 +100,6 @@ function Sort(objArray, comparatorFunc) {
   }
 }
 
-function equalsIgnoreCase(str1, str2) {
-  if(typeof str1 !== 'string' || typeof str2 !== 'string') {
-    return false;
-  }
-
-  return (new String(str1)).trim().toLowerCase() == (new String(str2)).trim().toLowerCase();
-}
-
 
 
 function Table(tableName) {
@@ -118,7 +110,6 @@ function Table(tableName) {
   this.tableBodyDOM = null;
   this.tableHeadDOM = null;
   this.rowsDOMCollection = null;
-  this.columns = {};
   this.tableFormDOM = null;
   this.tableFormInputs = null;
   this.selectedRowDOM = null;
@@ -189,13 +180,10 @@ function Table(tableName) {
       // for each cell in row
       for (var j = 0; j < this.rowsDOMCollection[i].children.length; j++) {
         var colName = this.rowsDOMCollection[i].children[j].getAttribute('name');
-        if(equalsIgnoreCase(colName, orderObj.column)) {
-          var value = this.rowsDOMCollection[i].children[j].textContent;
-          if(this.columns[colName].type == 'number') {
-            value = value.replace(' ', '') - 0;
-          }
+        colName = (new String(colName)).trim().toLowerCase();
+        if(colName == orderObj.column) {
           arr.push({
-            value: value,
+            value: this.rowsDOMCollection[i].children[j].textContent,
             td: this.rowsDOMCollection[i].children[j],
             tr: this.rowsDOMCollection[i]
           });
@@ -267,13 +255,6 @@ function onPageLoad() {
     table.rowsDOMCollection = table.tableBodyDOM.getElementsByTagName("tr");
     table.tableFormDOM = document.getElementById("table_"+table.tableName+"_form");
     table.tableFormInputs = table.tableFormDOM.getElementsByTagName("input");
-    var columnHeads = table.tableHeadDOM.getElementsByTagName('th');
-    for(var i = 0; i < columnHeads.length; i++) {
-      var name = columnHeads[i].getAttribute("name");
-      var type = columnHeads[i].getAttribute("type");
-      var DOM = columnHeads[i];
-      table.columns[name] = {name: name, type: type, DOM: DOM};
-    }
   }
 }
 

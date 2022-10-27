@@ -77,10 +77,12 @@ String JS_tableName = tableName + "_table";
 		<thead class="thead-dark">
 		<tr>
 			<%if(table.hasNumeration()) {%>
-				<th scope="col">#</th>
+				<th scope="col" name="#" type="number">#</th>
 			<%}%>
 			<%for (Column column: showableColumns) {%>
-				<th scope="col"><%=column.getLabel()%></th>
+				<th scope="col" name="<%=column.getName()%>" type="<%=column.getType()%>" onclick="<%=JS_tableName%>.changeOrdering('<%=column.getName()%>')">
+					<%=column.getLabel()%> &nbsp;
+				</th>
 			<%}%>
 		</tr>
 		</thead>
