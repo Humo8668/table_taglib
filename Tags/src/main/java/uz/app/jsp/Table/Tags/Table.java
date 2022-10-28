@@ -75,9 +75,9 @@ public class Table {
         this.dataStore = new DefaultDataStore((List<Map<String, Object>>)parsedData.get("rows"));
     }
 
-    public Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
+    /*public Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
         return this.dataStore.setOrdering("name", Ordering.ASC) .getRows(rowsInPage, pageNum);
-    }
+    }*/
     public int getOverallRowsCount() {
         return this.dataStore.getRowsCount();
     }
@@ -113,7 +113,7 @@ public class Table {
         return dataSourceClass;
     }
 
-    public List<Map<String, Object>> getRows() {
+    public Iterable<Map<String, Object>> getRows() {
         if(this.dataSourceClass == null) {
             throw new RuntimeException("Data source class was not initialized.");
         }

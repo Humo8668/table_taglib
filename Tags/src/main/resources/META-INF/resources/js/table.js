@@ -112,7 +112,7 @@ function equalsIgnoreCase(str1, str2) {
 
 function Table(tableName) {
   const INPUT_ROWS_IN_PAGE = "rows_in_page";
-  const INPUT_PAGE_NUMBER = "page_number";
+  const INPUT_PAGE_NUMBER = "active_page_number";
   this.tableName = tableName;
   this.tableDOM = null;
   this.tableBodyDOM = null;
@@ -135,8 +135,8 @@ function Table(tableName) {
 
   this.tableSubmit = function() {
     var tableParams = {};
-    tableParams.pageNumber = this.tableFormInputs[INPUT_PAGE_NUMBER].value;
-    tableParams.rowsInPage = this.tableFormInputs[INPUT_ROWS_IN_PAGE].value;
+    tableParams[INPUT_PAGE_NUMBER] = this.tableFormInputs[INPUT_PAGE_NUMBER].value;
+    tableParams[INPUT_ROWS_IN_PAGE] = this.tableFormInputs[INPUT_ROWS_IN_PAGE].value;
 
     this.tableFormInputs[this.tableName].value = JSON.stringify(tableParams);
     this.tableFormDOM.submit();
@@ -191,7 +191,7 @@ function Table(tableName) {
         var colName = this.rowsDOMCollection[i].children[j].getAttribute('name');
         if(equalsIgnoreCase(colName, orderObj.column)) {
           var value = this.rowsDOMCollection[i].children[j].textContent;
-          if(this.columns[colName].type == 'number') {
+          if(equalsIgnoreCase(this.columns[colName].type, 'number')) {
             value = value.replace(' ', '') - 0;
           }
           arr.push({
@@ -255,25 +255,29 @@ function Table(tableName) {
     // *****************
     this._refreshOrderIcons();
   }
+
+  this._onPageLoad = function() {
+    this.tableDOM = document.getElementById(this.tableName);
+    this.tableBodyDOM = this.tableDOM.getElementsByTagName("tbody")[0];
+    this.tableHeadDOM = this.tableDOM.getElementsByTagName("thead")[0];
+    this.rowsDOMCollection = this.tableBodyDOM.getElementsByTagName("tr");
+    this.tableFormDOM = document.getElementById("table_"+this.tableName+"_form");
+    this.tableFormInputs = this.tableFormDOM.getElementsByTagName("input");
+    var columnHeads = this.tableHeadDOM.getElementsByTagName('th');
+    for(var i = 0; i < columnHeads.length; i++) {
+      var name = columnHeads[i].getAttribute("name");
+      var type = columnHeads[i].getAttribute("type");
+      var DOM = columnHeads[i];
+      this.columns[name] = {name: name, type: type, DOM: DOM};
+    }
+  }
 }
 
 function onPageLoad() {
   var tables = getTableManager().getTablesArray();
   for(var i = 0; i < tables.length; i++) {
     let table = tables[i];
-    table.tableDOM = document.getElementById(table.tableName);
-    table.tableBodyDOM = table.tableDOM.getElementsByTagName("tbody")[0];
-    table.tableHeadDOM = table.tableDOM.getElementsByTagName("thead")[0];
-    table.rowsDOMCollection = table.tableBodyDOM.getElementsByTagName("tr");
-    table.tableFormDOM = document.getElementById("table_"+table.tableName+"_form");
-    table.tableFormInputs = table.tableFormDOM.getElementsByTagName("input");
-    var columnHeads = table.tableHeadDOM.getElementsByTagName('th');
-    for(var i = 0; i < columnHeads.length; i++) {
-      var name = columnHeads[i].getAttribute("name");
-      var type = columnHeads[i].getAttribute("type");
-      var DOM = columnHeads[i];
-      table.columns[name] = {name: name, type: type, DOM: DOM};
-    }
+    table._onPageLoad();
   }
 }
 

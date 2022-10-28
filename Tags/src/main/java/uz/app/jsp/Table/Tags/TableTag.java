@@ -1,6 +1,7 @@
 package uz.app.jsp.Table.Tags;
 
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
@@ -13,12 +14,16 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 
 
 public class TableTag extends BodyTagSupport {
     static final String TABLES_LIST = "TABLES_LIST";
     static final int DEFAULT_NUMBER_OF_ROWS_IN_PAGE = 20;
     static final int DEFAULT_PAGE_NUMBER = 1;
+    static GsonBuilder gsonBuilder = new GsonBuilder();
 
     private String tableName;
     private String dataJson;
@@ -47,30 +52,34 @@ public class TableTag extends BodyTagSupport {
     }
 
     private void initArguments() {
-        String tableArgumentsStr = this.request.getParameter(this.tableName);
-        if(tableArgumentsStr == null || "".equals(tableArgumentsStr)) {
-            String key_tableArgsInSession = "table_" + this.tableName;
-            Object tableArgumentsInSession = this.session.getAttribute(key_tableArgsInSession);
-            if(tableArgumentsInSession != null && tableArgumentsInSession instanceof String) {
-                tableArgumentsStr = tableArgumentsInSession.toString();
+        String tableArgumentsJson = this.request.getParameter(this.tableName);
+        Gson gson = gsonBuilder.create();
+        TableArguments arguments = null;
+        String SESSION_KEY_FOR_TABLE = "table_" + this.tableName;
+        try {
+            if(tableArgumentsJson == null)
+                throw new JsonSyntaxException("Null value passed as argument");
+            arguments = gson.fromJson(tableArgumentsJson, TableArguments.class);
+            if(arguments.getActivePageNum() <= 0) 
+                arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
+            if(arguments.getRowsInPage() <= 0)
+                arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
+        } catch(JsonSyntaxException ex) {
+            if(session.getAttribute(SESSION_KEY_FOR_TABLE) instanceof TableArguments) {
+                arguments = (TableArguments)session.getAttribute(SESSION_KEY_FOR_TABLE);
             } else {
-                tableArgumentsStr = DEFAULT_PAGE_NUMBER + ";" + DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
+                arguments = new TableArguments();
+                arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
+                arguments.setRowsInPage(DEFAULT_NUMBER_OF_ROWS_IN_PAGE);
             }
         }
-        
-        try {
-            String[] tableArguments = tableArgumentsStr.split(";");
-            this.activePageNumber = Integer.valueOf(tableArguments[0]);
-            this.rowsInPage = Integer.valueOf(tableArguments[1]);
-        } catch(NumberFormatException | PatternSyntaxException ex) {
-            this.activePageNumber = DEFAULT_PAGE_NUMBER;
-            this.rowsInPage = DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
-            tableArgumentsStr = DEFAULT_PAGE_NUMBER + ";" + DEFAULT_NUMBER_OF_ROWS_IN_PAGE;
-        }
-        this.session.setAttribute("table_" + this.tableName, tableArgumentsStr);
+        arguments.setTargetTable(table.getName());
+        this.table.setActivePageNumber(arguments.getActivePageNum());
+        this.table.setRowsNumerPerPage(arguments.getRowsInPage());
+        this.session.setAttribute(SESSION_KEY_FOR_TABLE, arguments);
     }
 
-    private void initTableAttributes() {
+    private void initTagAttributes() {
         this.table = new Table(this.getName());
         this.table.setDataJson(this.dataJson);
         this.table.setCaption(this.caption);
@@ -80,7 +89,6 @@ public class TableTag extends BodyTagSupport {
         } catch (ClassNotFoundException e1) {
             throw new RuntimeException(e1);
         }
-
         initArguments();
     }
 
@@ -108,7 +116,7 @@ public class TableTag extends BodyTagSupport {
         if(tables.stream().anyMatch((t) -> t.getName().equals(this.getName())))
             throw new RuntimeException("Duplicate name of table <"+ this.getName() +">");
 
-        initTableAttributes();
+        initTagAttributes();
         tables.add(this.table);
         return EVAL_BODY_INCLUDE;
     }
