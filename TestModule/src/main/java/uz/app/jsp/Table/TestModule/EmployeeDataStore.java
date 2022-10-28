@@ -28,6 +28,13 @@ public class EmployeeDataStore implements DataStore {
         employees.add(new Employee("Michael Muligan", 2, 2, 900.0f));
         employees.add(new Employee("Klark Lindstone", 2, 3, 650.0f));
         employees.add(new Employee("Emily Gordon", 2, 3, 450.0f));
+        employees.add(new Employee("George Washington", 1, 4, 950.0f));
+        employees.add(new Employee("Cameron Urban", 3, 1, 1500.0f));
+        employees.add(new Employee("Barbara Straze", 3, 2, 1200f));
+        employees.add(new Employee("Li Juan Yu", 3, 3, 1100f));
+        employees.add(new Employee("Natan Jurevski", 3, 4, 900f));
+        employees.add(new Employee("Salah Farhadi", 3, 5, 1000f));
+        employees.add(new Employee("Umar Lamar", 3, 6, 600f));
     }
 
     @Override
@@ -78,6 +85,34 @@ public class EmployeeDataStore implements DataStore {
         }
 
         return empsInPage;
+    }
+
+    @Override
+    public DataStore setOrdering(String colName, Ordering order) {
+        return this.setOrdering(colName, order, false);
+    }
+
+    @Override
+    public DataStore setOrdering(String colName, int orderSign) {
+        return this.setOrdering(colName, (orderSign>=0)?Ordering.ASC:Ordering.DESC, false);
+    }
+
+    @Override
+    public DataStore setOrdering(String colName, Ordering order, boolean nullsFirst) {
+        this.employees.sort(Employee.getComparator(colName));
+        return this;
+    }
+
+    @Override
+    public DataStore setFilterEquals(String colName, Object value) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public DataStore setFilterBetween(String colName, Object leftBorder, Object rightBorder) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 }

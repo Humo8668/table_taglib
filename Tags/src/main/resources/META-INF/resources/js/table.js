@@ -59,14 +59,70 @@ function getTableManager(){
   }
 }
 
+var ORDERS = {
+  DEFAULT: 0,
+  ASC: 1,
+  DESC: -1
+};
+
+function getNextOrdering(currOrdering) {
+
+  if(currOrdering == ORDERS.DEFAULT || typeof currOrdering === 'undefined') {
+    return ORDERS.ASC;
+  } else if (currOrdering == ORDERS.ASC) {
+    return ORDERS.DESC;
+  } else if (currOrdering == ORDERS.DESC) {
+    return ORDERS.ASC;
+  } else { // keeping code complainable 
+    return ORDERS.ASC;
+  }
+
+  /*if(currOrdering == ORDERS.DEFAULT || typeof currOrdering === 'undefined') {
+    return ORDERS.ASC;
+  } else if (currOrdering == ORDERS.ASC) {
+    return ORDERS.DESC;
+  } else if (currOrdering == ORDERS.DESC) {
+    return ORDERS.DEFAULT;
+  } else { // keeping code complainable 
+    return ORDERS.DEFAULT;
+  }*/
+}
+
+function Sort(objArray, comparatorFunc) {
+  for(var i = 0; i < objArray.length; i++) {
+    for(var j = 0; j < objArray.length-i-1; j++) {
+      if(comparatorFunc(objArray[j], objArray[j+1]) > 0) {
+        var obj = objArray[j];
+        objArray[j] = objArray[j+1];
+        objArray[j+1] = obj;
+      }
+    }
+  }
+}
+
+function equalsIgnoreCase(str1, str2) {
+  if(typeof str1 !== 'string' || typeof str2 !== 'string') {
+    return false;
+  }
+
+  return (new String(str1)).trim().toLowerCase() == (new String(str2)).trim().toLowerCase();
+}
+
+
 
 function Table(tableName) {
   const INPUT_ROWS_IN_PAGE = "rows_in_page";
-  const INPUT_PAGE_NUMBER = "page_number";
+  const INPUT_PAGE_NUMBER = "active_page_number";
   this.tableName = tableName;
   this.tableDOM = null;
+  this.tableBodyDOM = null;
+  this.tableHeadDOM = null;
+  this.rowsDOMCollection = null;
+  this.columns = {};
   this.tableFormDOM = null;
   this.tableFormInputs = null;
+  this.selectedRowDOM = null;
+  this.ordering = {};
   getTableManager().registerTable(tableName, this);
 
   this.getTableDOM = function() {
@@ -78,11 +134,11 @@ function Table(tableName) {
   }
 
   this.tableSubmit = function() {
-    this.tableFormInputs[this.tableName].value = 
-      this.tableFormInputs[INPUT_PAGE_NUMBER].value +
-      ";" +
-      this.tableFormInputs[INPUT_ROWS_IN_PAGE].value +
-      "";
+    var tableParams = {};
+    tableParams[INPUT_PAGE_NUMBER] = this.tableFormInputs[INPUT_PAGE_NUMBER].value;
+    tableParams[INPUT_ROWS_IN_PAGE] = this.tableFormInputs[INPUT_ROWS_IN_PAGE].value;
+
+    this.tableFormInputs[this.tableName].value = JSON.stringify(tableParams);
     this.tableFormDOM.submit();
   }
 
@@ -125,15 +181,103 @@ function Table(tableName) {
     }
     return row;
   }
+
+  this._order = function(orderObj) {
+    var arr = [];
+    // for each row
+    for (var i = 0; i < this.rowsDOMCollection.length; i++) {
+      // for each cell in row
+      for (var j = 0; j < this.rowsDOMCollection[i].children.length; j++) {
+        var colName = this.rowsDOMCollection[i].children[j].getAttribute('name');
+        if(equalsIgnoreCase(colName, orderObj.column)) {
+          var value = this.rowsDOMCollection[i].children[j].textContent;
+          if(equalsIgnoreCase(this.columns[colName].type, 'number')) {
+            value = value.replace(' ', '') - 0;
+          }
+          arr.push({
+            value: value,
+            td: this.rowsDOMCollection[i].children[j],
+            tr: this.rowsDOMCollection[i]
+          });
+        }
+      }
+    }
+
+    Sort(arr, function(left, right) {
+      if(left.value > right.value) {
+        return 1 * orderObj.order;
+      } else if(left.value < right.value) {
+        return -1 * orderObj.order;
+      } else {
+        return 0;
+      }
+    });
+
+    for(var i = 0; i < arr.length; i++) {
+      this.tableBodyDOM.appendChild(arr[i].tr); // Cannot be two same DOM-Nodes in one DOM element. So when existing node re-added, first will be deleted.
+    }
+  }
+
+  this._refreshOrderIcons = function() {
+    var columnHeads = this.tableHeadDOM.getElementsByTagName("th");
+    for(var i = 0; i < columnHeads.length; i++) {
+      if(typeof columnHeads[i].getElementsByTagName("i")[0] !== 'undefined')
+        columnHeads[i].removeChild(columnHeads[i].getElementsByTagName("i")[0]);
+      var colName = columnHeads[i].getAttribute("name");
+      if(typeof colName === 'undefined')
+        continue;
+      if(typeof this.ordering[colName] === 'undefined')
+        continue;
+
+      var icon = document.createElement("i");
+      if(this.ordering[colName].order == ORDERS.ASC)
+        icon.setAttribute("class", "fa fa-sort-up");
+      else if(this.ordering[colName].order == ORDERS.DESC)
+        icon.setAttribute("class", "fa fa-sort-down");
+      else
+        continue;
+
+      columnHeads[i].appendChild(icon);
+    }
+  }
+
+  this.changeOrdering = function(column) {
+    var orderObj = {};
+    if(typeof this.ordering[column] !== 'undefined') {
+      orderObj = this.ordering[column];
+    } else {
+      orderObj.column = column;
+    }
+    orderObj.order = getNextOrdering(orderObj.order);
+    this.ordering[column] = orderObj;
+    // *****************
+    this._order(orderObj);
+    // *****************
+    this._refreshOrderIcons();
+  }
+
+  this._onPageLoad = function() {
+    this.tableDOM = document.getElementById(this.tableName);
+    this.tableBodyDOM = this.tableDOM.getElementsByTagName("tbody")[0];
+    this.tableHeadDOM = this.tableDOM.getElementsByTagName("thead")[0];
+    this.rowsDOMCollection = this.tableBodyDOM.getElementsByTagName("tr");
+    this.tableFormDOM = document.getElementById("table_"+this.tableName+"_form");
+    this.tableFormInputs = this.tableFormDOM.getElementsByTagName("input");
+    var columnHeads = this.tableHeadDOM.getElementsByTagName('th');
+    for(var i = 0; i < columnHeads.length; i++) {
+      var name = columnHeads[i].getAttribute("name");
+      var type = columnHeads[i].getAttribute("type");
+      var DOM = columnHeads[i];
+      this.columns[name] = {name: name, type: type, DOM: DOM};
+    }
+  }
 }
 
 function onPageLoad() {
   var tables = getTableManager().getTablesArray();
   for(var i = 0; i < tables.length; i++) {
     let table = tables[i];
-    table.tableDOM = document.getElementById(table.tableName);
-    table.tableFormDOM = document.getElementById("table_"+table.tableName+"_form");
-    table.tableFormInputs = table.tableFormDOM.getElementsByTagName("input");
+    table._onPageLoad();
   }
 }
 

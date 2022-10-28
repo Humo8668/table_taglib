@@ -4,10 +4,10 @@
 <%
 Table table = (Table)request.getAttribute("table");
 String tableName = table.getName();
-Integer pagesCount = Integer.valueOf(request.getAttribute("pages_count").toString());
-Integer activePage = Integer.valueOf(request.getAttribute("active_page").toString());
-Integer rowsInPage = Integer.valueOf(request.getAttribute("rows_in_page").toString());
-Integer overallRowsCount = Integer.valueOf(request.getAttribute("overall_rows").toString());
+Integer overallRowsCount = table.getOverallRowsCount();
+Integer activePage = table.getActivePageNumber(); //Integer.valueOf(request.getAttribute("active_page").toString());
+Integer rowsInPage = table.getRowsNumberPerPage();//Integer.valueOf(request.getAttribute("rows_in_page").toString());
+Integer pagesCount = overallRowsCount / rowsInPage + ((overallRowsCount % rowsInPage != 0)?1:0);//Integer.valueOf(request.getAttribute("pages_count").toString());
 String JS_tableName = tableName + "_table";
 %>
 
@@ -52,7 +52,7 @@ String JS_tableName = tableName + "_table";
 						label="Number of rows in page" 
 						value="<%=rowsInPage%>"
 						style="text-align: right;">
-					<input type="hidden" name="page_number" value="<%=activePage%>">
+					<input type="hidden" name="active_page_number" value="<%=activePage%>">
 				</div>
 			</td>
 			<td>
@@ -77,17 +77,19 @@ String JS_tableName = tableName + "_table";
 		<thead class="thead-dark">
 		<tr>
 			<%if(table.hasNumeration()) {%>
-				<th scope="col">#</th>
+				<th scope="col" name="#" type="number">#</th>
 			<%}%>
 			<%for (Column column: showableColumns) {%>
-				<th scope="col"><%=column.getLabel()%></th>
+				<th scope="col" name="<%=column.getName()%>" type="<%=column.getType()%>" onclick="<%=JS_tableName%>.changeOrdering('<%=column.getName()%>')">
+					<%=column.getLabel()%> &nbsp;
+				</th>
 			<%}%>
 		</tr>
 		</thead>
 		<tbody>
 		<%
 		int rowNumeration = 1;
-		Iterable<Map<String, Object>> rowsData = table.getRows(rowsInPage, activePage);
+		Iterable<Map<String, Object>> rowsData = table.getRows();
         Iterator<Map<String, Object>> rowIterator = rowsData.iterator();
 		if(!rowIterator.hasNext()) { %>
             <tr> <td align="center" colspan='100%'>(No data)</td></tr>

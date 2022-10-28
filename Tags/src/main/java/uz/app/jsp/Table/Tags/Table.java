@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import uz.app.jsp.Table.DataStore;
+import uz.app.jsp.Table.DataStore.Ordering;
 
 public class Table {
     private List<Column> columns;
@@ -22,6 +24,9 @@ public class Table {
     private String dataSourceClass;
     private DataStore dataStore;
     private boolean hasNumeration = false;
+
+    private Integer rowsInPage;
+    private Integer activePageNum;
 
     private Gson jsonParser;
 
@@ -70,9 +75,9 @@ public class Table {
         this.dataStore = new DefaultDataStore((List<Map<String, Object>>)parsedData.get("rows"));
     }
 
-    public Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
-        return this.dataStore.getRows(rowsInPage, pageNum);
-    }
+    /*public Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
+        return this.dataStore.setOrdering("name", Ordering.ASC) .getRows(rowsInPage, pageNum);
+    }*/
     public int getOverallRowsCount() {
         return this.dataStore.getRowsCount();
     }
@@ -107,12 +112,32 @@ public class Table {
     public String getDataStoreClass() {
         return dataSourceClass;
     }
+
+    public Iterable<Map<String, Object>> getRows() {
+        if(this.dataSourceClass == null) {
+            throw new RuntimeException("Data source class was not initialized.");
+        }
+        return this.dataStore.getRows(this.rowsInPage, this.activePageNum);
+    }
     
     public void setNumeration(boolean hasNumeration) {
         this.hasNumeration = hasNumeration;
     }
-    
     public boolean hasNumeration() {
         return this.hasNumeration;
+    }
+
+    public void setRowsNumerPerPage(Integer rowsPerPage) {
+        this.rowsInPage = rowsPerPage;
+    }
+    public Integer getRowsNumberPerPage() {
+        return this.rowsInPage;
+    }
+
+    public void setActivePageNumber(Integer activePageNum) {
+        this.activePageNum = activePageNum;
+    }
+    public Integer getActivePageNumber() {
+        return this.activePageNum;
     }
 }
