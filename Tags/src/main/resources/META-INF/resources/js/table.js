@@ -256,6 +256,10 @@ function Table(tableName) {
     this._refreshOrderIcons();
   }
 
+  this.filter = function (filterObj) {
+    console.log(filterObj);
+  }
+
   this._onPageLoad = function() {
     this.tableDOM = document.getElementById(this.tableName);
     this.tableBodyDOM = this.tableDOM.getElementsByTagName("tbody")[0];

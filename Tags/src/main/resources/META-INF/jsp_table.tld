@@ -100,5 +100,17 @@
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
+
+        <attribute>
+            <name>filterType</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+
+        <attribute>
+            <name>filterOptionsClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
     </tag>
 </taglib>

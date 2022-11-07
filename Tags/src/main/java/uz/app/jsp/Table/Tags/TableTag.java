@@ -60,10 +60,6 @@ public class TableTag extends BodyTagSupport {
             if(tableArgumentsJson == null)
                 throw new JsonSyntaxException("Null value passed as argument");
             arguments = gson.fromJson(tableArgumentsJson, TableArguments.class);
-            if(arguments.getActivePageNum() <= 0) 
-                arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
-            if(arguments.getRowsInPage() <= 0)
-                arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
         } catch(JsonSyntaxException ex) {
             if(session.getAttribute(SESSION_KEY_FOR_TABLE) instanceof TableArguments) {
                 arguments = (TableArguments)session.getAttribute(SESSION_KEY_FOR_TABLE);
@@ -74,6 +70,11 @@ public class TableTag extends BodyTagSupport {
             }
         }
         arguments.setTargetTable(table.getName());
+        if(arguments.getActivePageNum() <= 0) 
+            arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
+        if(arguments.getRowsInPage() <= 0)
+            arguments.setRowsInPage(DEFAULT_NUMBER_OF_ROWS_IN_PAGE);
+            
         this.table.setActivePageNumber(arguments.getActivePageNum());
         this.table.setRowsNumerPerPage(arguments.getRowsInPage());
         this.session.setAttribute(SESSION_KEY_FOR_TABLE, arguments);

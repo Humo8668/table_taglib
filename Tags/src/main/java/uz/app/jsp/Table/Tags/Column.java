@@ -4,7 +4,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
 public class Column {
-    public enum ColumnType {STRING, NUMBER}
+    public enum ColumnType {STRING, NUMBER, DATE}
 
     private String name;
     private boolean showColumn;
@@ -12,6 +12,7 @@ public class Column {
     private int orderValue;
     private ColumnType type = ColumnType.STRING;
     private String format = null;
+    private Filter filter;
 
     private DecimalFormatSymbols formatSymbols;
     private DecimalFormat formatObject;
@@ -92,5 +93,12 @@ public class Column {
                 formattedValue = value;
         }
         return formattedValue;
+    }
+
+    public void setFilter(Filter filter) {
+        this.filter = filter;
+    }
+    public Filter getFilter() {
+        return this.filter;
     }
 }
