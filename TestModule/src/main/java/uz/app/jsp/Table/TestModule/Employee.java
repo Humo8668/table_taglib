@@ -3,7 +3,11 @@ package uz.app.jsp.Table.TestModule;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,17 +21,33 @@ public class Employee {
     private int id;
     private String name;
     private int depId;
+    private String depName;
     private int postId;
+    private String postName;
     private float salary;
+    private Date hiredDate;
 
-    public Employee(String name, int depId, int postId, float salary) {
+    private static DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+
+ 
+
+    public Employee(String name, int depId, int postId, float salary, String depName, String postName, String hiredDate) {
         this.id = getNextId();
         this.name = name;
         this.depId = depId;
         this.postId = postId;
         this.salary = salary;
+        this.depName = depName;
+        this.postName = postName;
+        try {
+            this.hiredDate = dateFormat.parse(hiredDate);
+        } catch (ParseException e) {
+            this.hiredDate = new Date();
+            e.printStackTrace();
+        }
     }
-
+    
+    
     public int getId() {
         return id;
     }
@@ -56,6 +76,25 @@ public class Employee {
     public void setSalary(float salary) {
         this.salary = salary;
     }
+    public String getDepName() {
+        return depName;
+    }
+    public void setDepName(String depName) {
+        this.depName = depName;
+    }
+    public String getPostName() {
+        return postName;
+    }
+    public void setPostName(String postName) {
+        this.postName = postName;
+    }
+    public Date getHiredDate() {
+        return hiredDate;
+    }
+    public void setHiredDate(Date hiredDate) {
+        this.hiredDate = hiredDate;
+    }
+
 
     public Map<String, Object> toMap() {
         HashMap<String, Object> mapping = new HashMap<>();

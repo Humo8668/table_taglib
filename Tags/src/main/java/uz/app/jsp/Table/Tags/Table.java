@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import uz.app.jsp.Table.DataStore;
-import uz.app.jsp.Table.DataStore.Ordering;
 
 public class Table {
     private List<Column> columns;
@@ -74,11 +73,7 @@ public class Table {
 
         this.dataStore = new DefaultDataStore((List<Map<String, Object>>)parsedData.get("rows"));
     }
-
-    /*public Iterable<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
-        return this.dataStore.setOrdering("name", Ordering.ASC) .getRows(rowsInPage, pageNum);
-    }*/
-    public int getOverallRowsCount() {
+    public int getFilteredRowsCount() {
         return this.dataStore.getRowsCount();
     }
     public void setCaption(String caption) {
@@ -113,7 +108,7 @@ public class Table {
         return dataSourceClass;
     }
 
-    public Iterable<Map<String, Object>> getRows() {
+    public Collection<Map<String, Object>> getRows() {
         if(this.dataSourceClass == null) {
             throw new RuntimeException("Data source class was not initialized.");
         }
@@ -139,5 +134,45 @@ public class Table {
     }
     public Integer getActivePageNumber() {
         return this.activePageNum;
+    }
+    public List<Filter> getFiltersList() {
+        List<Filter> filters = new LinkedList<Filter>();
+        for (Column column : this.columns) {
+            if(column.getFilter() != null)
+                filters.add(column.getFilter());
+        }
+        return filters;
+    }
+    public boolean hasFilterConstraints() {
+        for (Column column : columns) {
+            if(column.hasFilterConstraints()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void applyArguments(TableArguments arguments) {
+        this.setRowsNumerPerPage(arguments.getRowsInPage());
+        this.setActivePageNumber(arguments.getActivePageNum());
+        HashMap<String, Object> newFilters = arguments.getFilters();
+        if(newFilters == null) 
+            return;
+        for (Column column : columns) {
+            if(newFilters.containsKey(column.getName())) {
+                Filter currentFilter = column.getFilter();
+                if(currentFilter == null)
+                    continue; // ignore this column if it has no filter attribute
+                Object filterNewValue = newFilters.get(currentFilter.getColumnName());
+                if(filterNewValue instanceof String && "".equals(filterNewValue.toString().trim())) {
+                    currentFilter.setValue(null);
+                } else if(filterNewValue instanceof Collection) {
+                    currentFilter.setValuesArray((Collection)filterNewValue);
+                } else {
+                    currentFilter.setValue(filterNewValue);
+                }
+            }
+        }
+        dataStore.setFilters(getFiltersList());
     }
 }

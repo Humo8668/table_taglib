@@ -52,32 +52,42 @@ public class TableTag extends BodyTagSupport {
     }
 
     private void initArguments() {
-        String tableArgumentsJson = this.request.getParameter(this.tableName);
-        Gson gson = gsonBuilder.create();
-        TableArguments arguments = null;
+        /*
+         * 1) Get arguments from session. If there's no any, then create new one.
+         * 2) Check for request arguments. If some exist, put them to the session (sessionArguments.Impose(requestArguments);)
+         * 3) Deal with session arguments.
+         */
         String SESSION_KEY_FOR_TABLE = "table_" + this.tableName;
-        try {
-            if(tableArgumentsJson == null)
-                throw new JsonSyntaxException("Null value passed as argument");
-            arguments = gson.fromJson(tableArgumentsJson, TableArguments.class);
-        } catch(JsonSyntaxException ex) {
-            if(session.getAttribute(SESSION_KEY_FOR_TABLE) instanceof TableArguments) {
-                arguments = (TableArguments)session.getAttribute(SESSION_KEY_FOR_TABLE);
-            } else {
-                arguments = new TableArguments();
-                arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
-                arguments.setRowsInPage(DEFAULT_NUMBER_OF_ROWS_IN_PAGE);
-            }
+        TableArguments sessionArguments = null;
+        if(session.getAttribute(SESSION_KEY_FOR_TABLE) instanceof TableArguments) {
+            sessionArguments = (TableArguments)this.session.getAttribute(SESSION_KEY_FOR_TABLE);
+        } else {
+            sessionArguments = new TableArguments();
+            sessionArguments.setTargetTable(table.getName());
+            sessionArguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
+            sessionArguments.setRowsInPage(DEFAULT_NUMBER_OF_ROWS_IN_PAGE);
         }
-        arguments.setTargetTable(table.getName());
-        if(arguments.getActivePageNum() <= 0) 
-            arguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
-        if(arguments.getRowsInPage() <= 0)
-            arguments.setRowsInPage(DEFAULT_NUMBER_OF_ROWS_IN_PAGE);
+
+        String requestArgumentsJson = this.request.getParameter(this.tableName);
+        Gson gson = gsonBuilder.create();
+        TableArguments requestArguments = null;
+        try {
+            if(requestArgumentsJson == null)
+                throw new JsonSyntaxException("Null value passed as argument");
+            requestArguments = gson.fromJson(requestArgumentsJson, TableArguments.class);
+        } catch(JsonSyntaxException ex) {
+            requestArguments = new TableArguments();
+        }
+
+        sessionArguments.Impose(requestArguments);
+        
+        if(sessionArguments.getActivePageNum() <= 0)
+            sessionArguments.setActivePageNum(DEFAULT_PAGE_NUMBER);
+        if(sessionArguments.getRowsInPage() <= 0)
+            sessionArguments.setRowsInPage(DEFAULT_NUMBER_OF_ROWS_IN_PAGE);
             
-        this.table.setActivePageNumber(arguments.getActivePageNum());
-        this.table.setRowsNumerPerPage(arguments.getRowsInPage());
-        this.session.setAttribute(SESSION_KEY_FOR_TABLE, arguments);
+        this.table.applyArguments(sessionArguments);
+        this.session.setAttribute(SESSION_KEY_FOR_TABLE, sessionArguments);
     }
 
     private void initTagAttributes() {
@@ -90,7 +100,6 @@ public class TableTag extends BodyTagSupport {
         } catch (ClassNotFoundException e1) {
             throw new RuntimeException(e1);
         }
-        initArguments();
     }
 
     private int getCurrentActivePage() {
@@ -102,7 +111,7 @@ public class TableTag extends BodyTagSupport {
     }
 
     private int getCurrentPagesCount() {
-        int overall = table.getOverallRowsCount();
+        int overall = table.getFilteredRowsCount();
         return overall / this.rowsInPage + ((overall % this.rowsInPage != 0)?1:0);
     }
 
@@ -128,10 +137,6 @@ public class TableTag extends BodyTagSupport {
 
         RequestDispatcher rd = pageContext.getServletContext().getRequestDispatcher(TEMPLATE_URL);
         request.setAttribute("table", this.table);
-        request.setAttribute("pages_count", getCurrentPagesCount());
-        request.setAttribute("active_page", getCurrentActivePage());
-        request.setAttribute("rows_in_page", getCurrentRowsNumberInPage());
-        request.setAttribute("overall_rows", this.getTable().getOverallRowsCount());
         try {
             rd.include(request, response);
         } catch (ServletException | IOException ex) {
@@ -146,6 +151,7 @@ public class TableTag extends BodyTagSupport {
     public int doEndTag() {
         JspWriter out = pageContext.getOut();//returns the instance of JspWriter
         try{
+            initArguments();
             printTable(out);
         }catch(Exception e){
             throw new RuntimeException(e);

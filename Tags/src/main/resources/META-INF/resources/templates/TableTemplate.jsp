@@ -1,13 +1,14 @@
-<%@ page import="uz.app.jsp.Table.Tags.*" %>
-<%@ page import="java.util.Iterator, java.util.LinkedList, java.util.List, java.util.Map" %>
+<%@ page import="uz.app.jsp.Table.Tags.*, uz.app.jsp.Table.*" %>
+<%@ page import="java.util.*" %>
 <%@ page import="java.io.IOException" %>
 <%
 Table table = (Table)request.getAttribute("table");
 String tableName = table.getName();
-Integer overallRowsCount = table.getOverallRowsCount();
-Integer activePage = table.getActivePageNumber(); //Integer.valueOf(request.getAttribute("active_page").toString());
-Integer rowsInPage = table.getRowsNumberPerPage();//Integer.valueOf(request.getAttribute("rows_in_page").toString());
-Integer pagesCount = overallRowsCount / rowsInPage + ((overallRowsCount % rowsInPage != 0)?1:0);//Integer.valueOf(request.getAttribute("pages_count").toString());
+Collection<Map<String, Object>> rowsData = table.getRows();
+Integer overallRowsCount = table.getFilteredRowsCount();
+Integer activePage = table.getActivePageNumber(); 
+Integer rowsInPage = table.getRowsNumberPerPage();
+Integer pagesCount = overallRowsCount / rowsInPage + ((overallRowsCount % rowsInPage != 0)?1:0);
 String JS_tableName = tableName + "_table";
 %>
 
@@ -22,7 +23,7 @@ String JS_tableName = tableName + "_table";
 	var <%=JS_tableName%> = new Table("<%=tableName%>");
 </script>
 
-<form name="table_<%=tableName%>_form" id="table_<%=tableName%>_form">
+<form name="table_<%=tableName%>_form" id="table_<%=tableName%>_form" method="post">
 	<div class="btn-toolbar justify-content-center" role="toolbar" aria-label="Toolbar with button groups">
 		<div class="btn-group mr-2" role="group">
 		<%
@@ -61,7 +62,11 @@ String JS_tableName = tableName + "_table";
 				</button>
 			</td>
 			<td>
-				<button id="btnFilter" class="btn btn-dark" type="button" data-toggle="modal" data-target="#<%=tableName%>_filterModal">
+				<button id="btnFilter" 
+						class="btn <%if(table.hasFilterConstraints()) {%>btn-info<%} else {%>btn-dark<%}%>" 
+						type="button"
+						data-toggle="modal"
+						data-target="#<%=tableName%>_filterModal">
 					<i class="fa fa-filter"></i>&nbsp;<span>Filter</span>
 				</button>
 			</td>
@@ -89,11 +94,10 @@ String JS_tableName = tableName + "_table";
 		<tbody>
 		<%
 		int rowNumeration = 1;
-		Iterable<Map<String, Object>> rowsData = table.getRows();
         Iterator<Map<String, Object>> rowIterator = rowsData.iterator();
 		if(!rowIterator.hasNext()) { %>
             <tr> <td align="center" colspan='100%'>(No data)</td></tr>
-        <%} else { 
+        <%} else {
             Map<String,Object> rowObject;
             while(rowIterator.hasNext()) {
                 rowObject = rowIterator.next();%>
@@ -103,7 +107,7 @@ String JS_tableName = tableName + "_table";
 				<%}%>
 
 				<%for (Column column: showableColumns) {
-                    String formattedValue = column.formatValue(rowObject.getOrDefault(column.getName(), "").toString());%>
+                    String formattedValue = column.formatValue(rowObject.getOrDefault(column.getName(), ""));%>
 					<td name="<%=column.getName()%>"><%=formattedValue%></td>
 				<%}%>
 				</tr>
@@ -146,6 +150,12 @@ String JS_tableName = tableName + "_table";
 		$("#"+modalID).modal('hide');
 		table.filter(filterObj);
 	}
+	function clearFilters(formJqueryDOM) {
+		console.log("Clear the filter!");
+		formJqueryDOM.find("input,select,textarea,checkbox").each(function(idx, el){
+			el.value = "";
+		});
+	}
 </script>
 
 <div class="modal fade" id="<%=tableName%>_filterModal" tabindex="-1" role="dialog" aria-hidden="true" >
@@ -153,98 +163,130 @@ String JS_tableName = tableName + "_table";
 		<div class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Filter</h5>		
+				<button type="button" class="btn btn-dark" onclick="clearFilters($('form#<%=tableName%>-filter-form'))">Clear filters</button>
 			</div>
 			<div class="modal-body">
 
 			<form name="<%=tableName%>-filter-form" id="<%=tableName%>-filter-form">
-
 				<%
-				List<uz.app.jsp.Table.Tags.Filter> filters = new LinkedList<uz.app.jsp.Table.Tags.Filter>();
-				for(Column col: showableColumns) {
-					if(col.getFilter() != null)
-						filters.add(col.getFilter());
-				}
-
+				List<uz.app.jsp.Table.Tags.Filter> filters = table.getFiltersList();
 				for(uz.app.jsp.Table.Tags.Filter filter: filters) {%>
 					<div class="form-group row">
 						<label for="<%=filter.getColumnName()%>" class="col-4 col-form-label"><%=filter.getLabel()%></label>
 						<div class="col-8 input-group">
 							<%
 							switch(filter.getType()) {
-								case EQUAL: {%>
+								case EQUAL: {
+									String inputType = "text";
+									String value = "";
+									if(filter.hasConstraints()) {
+										value = filter.getFormattedValue();
+									}
+									switch(filter.getColumnType()) {
+										case STRING: { 
+											inputType = "text";
+											break;
+										}
+										case NUMBER: {
+											inputType = "number";
+											break;
+										}
+										case DATE: {
+											inputType = "date";
+											if(filter.hasConstraints()) {
+												value = Util.getDateInHtmlFormat((Date)filter.getValue());
+											}
+											break;
+										}
+									}%>
 									<div class="input-group-prepend">
 										<div class="input-group-text">=</div>
 									</div>
-									<%
-									switch(filter.getColumnType()) {
-										case STRING: { %>
-											<input name="<%=filter.getColumnName()%>" id="<%=filter.getColumnName()%>" class="form-control" type="text"/>
-										<%}
-										case NUMBER: { %>
-											<input name="<%=filter.getColumnName()%>" id="<%=filter.getColumnName()%>" class="form-control" type="number"/>
-										<%}
-										case DATE: { %>
-											<input name="<%=filter.getColumnName()%>" id="<%=filter.getColumnName()%>" type="date" class="form-control">
-										<%}
-									}
-									%>
-								<%}
+									<input name="<%=filter.getColumnName()%>" 
+											id="<%=filter.getColumnName()%>" 
+											class="form-control" 
+											type="<%=inputType%>"
+											value="<%=value%>"/>
+								<%break;}
 								case LIKE: {%>
 									<div class="input-group-prepend">
 										<div class="input-group-text">like</div>
 									</div>
 									<%
+									String value = "";
+									if(filter.hasConstraints()) {
+										value = filter.getFormattedValue();
+									}
 									switch(filter.getColumnType()) {
 										case STRING:
 										case NUMBER: { %>
-											<input name="<%=filter.getColumnName()%>" id="<%=filter.getColumnName()%>" class="form-control" type="text"/>
-										<%}
-									}%>
-								<%}
-								case RANGE: { %>
-									<%
+											<input name="<%=filter.getColumnName()%>" 
+													id="<%=filter.getColumnName()%>" 
+													class="form-control" 
+													type="text"
+													value="<%=value%>"/>
+										<% break; }
+									}
+									%>
+								<%break;}
+								case RANGE: { 
+									String inputType = "text";
+									String leftValue = "";
+									String rightValue = "";
 									switch(filter.getColumnType()) {
-										case DATE: { %>
-											<div class="input-group-prepend">
-												<div class="input-group-text">between</div>
-											</div>
-											<input 	name="<%=filter.getColumnName()%>" 
-													id="<%=filter.getColumnName()%>" 
-													type="date" 
-													class="form-control">
-
-											<div class="input-group-prepend">
-												<div class="input-group-text">and</div>
-											</div>
-											<input 	name="<%=filter.getColumnName()%>" 
-													id="<%=filter.getColumnName()%>" 
-													type="date" 
-													class="form-control">
-										<%}
-										case NUMBER: { %>
-											<div class="input-group-prepend">
-												<div class="input-group-text">between</div>
-											</div>
-											<input 	name="<%=filter.getColumnName()%>" 
-													id="<%=filter.getColumnName()%>" 
-													type="number" 
-													class="form-control">
-
-											<div class="input-group-prepend">
-												<div class="input-group-text">and</div>
-											</div>
-											<input 	name="<%=filter.getColumnName()%>" 
-													id="<%=filter.getColumnName()%>" 
-													type="number" 
-													class="form-control">
-										<%}
+										case DATE: {
+											inputType = "date";
+											if(filter.hasConstraints()) {
+												leftValue = Util.getDateInHtmlFormat((Date)filter.getLeftBorder());
+												rightValue = Util.getDateInHtmlFormat((Date)filter.getRightBorder());
+											}
+											break;
+										}
+										case NUMBER: {
+											inputType = "number";
+											if(filter.hasConstraints()) {
+												leftValue = filter.getFormattedLeftBorder();
+												rightValue = filter.getFormattedRightBorder();
+											}
+											break;
+										}
 									}%>
-								<%}
+									<div class="input-group-prepend">
+										<div class="input-group-text">between</div>
+									</div>
+									<input 	name="<%=filter.getColumnName()%>" 
+											id="<%=filter.getColumnName()%>" 
+											type="<%=inputType%>" 
+											class="form-control"
+											value="<%=leftValue%>">
+
+									<div class="input-group-prepend">
+										<div class="input-group-text">and</div>
+									</div>
+									<input 	name="<%=filter.getColumnName()%>" 
+											id="<%=filter.getColumnName()%>" 
+											type="<%=inputType%>" 
+											class="form-control"
+											value="<%=rightValue%>">
+								<%break;}
+								case OPTION: {%>
+									<div class="input-group-prepend">
+										<div class="input-group-text">=</div>
+									</div>
+									<select name="<%=filter.getColumnName()%>" id="<%=filter.getColumnName()%>" class="custom-select">
+										<option value="">(none)</option>
+										<%
+										Map<Object, String> options = filter.getOptions();
+										for(Object optionValue : options.keySet()) {
+											if(optionValue.equals(filter.getValue())) {
+												%><option value='<%=optionValue%>' selected> <%=options.get(optionValue)%> </option><%
+											} else {
+												%><option value='<%=optionValue%>'> <%=options.get(optionValue)%> </option><%
+											}
+										}%>
+									</select>
+								<%break;}
 							}%>
-							<div class="input-group-prepend">
-								<div class="input-group-text">=</div>
-							</div>
-							<input name="user_id" id="user_id" class="form-control" type="text"/>
 						</div>
 					</div>
 				<%}%>

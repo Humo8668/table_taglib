@@ -7,7 +7,6 @@ import javax.servlet.jsp.tagext.TagSupport;
 public class ColumnTag extends TagSupport {
     private Table table;
     private Column column;
-    private Filter filter;
 
     public void setPageContext(PageContext pageContext) {
         super.setPageContext(pageContext);
@@ -63,8 +62,9 @@ public class ColumnTag extends TagSupport {
     public void setFilterType(String type) {
         if(type == null)
             return;
-        if(this.filter == null) {
-            this.filter = new Filter(this.column);
+        Filter filter = this.column.getFilter();
+        if(filter == null) {
+            filter = new Filter(this.column);
         }
         type = type.toUpperCase();
         Filter.Type tp = null;
@@ -73,18 +73,20 @@ public class ColumnTag extends TagSupport {
         } catch (IllegalArgumentException ex) {
             throw new RuntimeException("The filter type " + type + " is not defined.", ex);
         }
-        this.filter.setType(tp);
+        filter.setType(tp);
     } 
 
     public void setFilterOptionsClass(String className) {
         if(className == null)
             return;
-        if(this.filter == null) {
-            this.filter = new Filter(this.column);
-            this.filter.setType(Filter.Type.OPTION);
+        
+        Filter filter = this.column.getFilter();
+        if(filter == null) {
+            filter = new Filter(this.column);
+            filter.setType(Filter.Type.OPTION);
         }
         try {
-            this.filter.setOptionsClass(className);
+            filter.setOptionsClass(className);
         } catch (ClassNotFoundException | ClassCastException ex) {
             throw new RuntimeException("The class "+className+" not found or is not subclass of <uz.app.jsp.Options> class.", ex);
         }

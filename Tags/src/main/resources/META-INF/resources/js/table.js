@@ -113,6 +113,8 @@ function equalsIgnoreCase(str1, str2) {
 function Table(tableName) {
   const INPUT_ROWS_IN_PAGE = "rows_in_page";
   const INPUT_PAGE_NUMBER = "active_page_number";
+  const REQUEST_KEY_FOR_FILTER = "filters";
+
   this.tableName = tableName;
   this.tableDOM = null;
   this.tableBodyDOM = null;
@@ -258,6 +260,10 @@ function Table(tableName) {
 
   this.filter = function (filterObj) {
     console.log(filterObj);
+    var tableParams = {};
+    tableParams[REQUEST_KEY_FOR_FILTER] = filterObj;
+    this.tableFormInputs[this.tableName].value = JSON.stringify(tableParams);
+    this.tableFormDOM.submit();
   }
 
   this._onPageLoad = function() {

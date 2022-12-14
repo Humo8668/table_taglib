@@ -1,13 +1,12 @@
 package uz.app.jsp.Table.Tags;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import uz.app.jsp.Table.DataStore;
+import uz.app.jsp.Table.Tags.Filter.Type;
 
 class DefaultDataStore implements DataStore {
     List<Map<String, Object>> rows;
@@ -17,12 +16,17 @@ class DefaultDataStore implements DataStore {
     }
 
     @Override
+    public int getRowsCount() {
+        return this.rows.size();
+    }
+
+    @Override
     public List<Map<String, Object>> getAllRows() {
         return this.rows;
     }
 
     @Override
-    public List<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
+    public Collection<Map<String, Object>> getRows(int rowsInPage, int pageNum) {
         if(rowsInPage <= 0)
             throw new IllegalArgumentException("Count of rows in page must be greater than zero");
         if(pageNum <= 0) {
@@ -51,66 +55,11 @@ class DefaultDataStore implements DataStore {
                 break;
         }
 
-        return this.rows;
+        return result;
     }
 
     @Override
-    public int getRowsCount() {
-        return this.rows.size();
-    }
-
-    @Override
-    public DataStore setOrdering(String colName, Ordering order) {
-        return this.setOrdering(colName, order, false);
-    }
-
-    @Override
-    public DataStore setOrdering(String colName, int orderSign) {
-        return this.setOrdering(colName, (orderSign>=0)?Ordering.ASC:Ordering.DESC, false);
-    }
-
-    @Override
-    public DataStore setOrdering(String colName, Ordering order, boolean nullsFirst) {
+    public void setFilters(List<Filter> filters) {
         
-        this.rows.sort((first, second) -> {
-            Object firstValue = first.get(colName);
-            Object secondValue = second.get(colName);
-            if(firstValue == null && nullsFirst) 
-                return 1;
-
-            if(secondValue == null && nullsFirst)
-                return -1;
-            
-            if(firstValue instanceof Integer ||
-                firstValue instanceof Short ||
-                firstValue instanceof Character ||
-                firstValue instanceof Byte)
-            {
-                Integer f = (Integer)firstValue; 
-                Integer s = (Integer)secondValue;
-                return (f > s)?1:(f < s)?-1:0;
-            } else if(firstValue instanceof Double ||
-                    firstValue instanceof Float) 
-            {
-                Double f = (Double)firstValue;
-                Double s = (Double)secondValue;
-                return (f > s)?1:(f < s)?-1:0;
-            } else if(firstValue instanceof String) {
-                return ((String)firstValue).compareTo((String)secondValue);
-            } else {
-                return 0;
-            }
-        });
-        return this;
-    }
-
-    @Override
-    public DataStore setFilterEquals(String colName, Object value) {
-        return this;
-    }
-
-    @Override
-    public DataStore setFilterBetween(String colName, Object leftBorder, Object rightBorder) {
-        return this;
     }
 }
