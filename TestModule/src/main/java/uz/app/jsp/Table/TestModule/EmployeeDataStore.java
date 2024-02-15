@@ -12,8 +12,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import uz.app.jsp.Table.DataStore;
-import uz.app.jsp.Table.Tags.Filter;
-import uz.app.jsp.Table.Tags.Filter.Type;
+import uz.app.jsp.Table.Tags.model.Filter;
+import uz.app.jsp.Table.Tags.model.Filter.Type;
 
 public class EmployeeDataStore implements DataStore {
     GsonBuilder gsonBuilder;

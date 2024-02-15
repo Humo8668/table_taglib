@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import uz.app.jsp.Table.Tags.Filter;
-import uz.app.jsp.Table.Tags.Filter.Type;
+import uz.app.jsp.Table.Tags.model.Filter;
+import uz.app.jsp.Table.Tags.model.Filter.Type;
 
 public interface DataStore {
     public enum Ordering { ASC, DESC };

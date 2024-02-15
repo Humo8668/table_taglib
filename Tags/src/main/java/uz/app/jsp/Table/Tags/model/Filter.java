@@ -1,4 +1,4 @@
-package uz.app.jsp.Table.Tags;
+package uz.app.jsp.Table.Tags.model;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

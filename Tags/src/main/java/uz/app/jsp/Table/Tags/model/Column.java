@@ -1,10 +1,8 @@
-package uz.app.jsp.Table.Tags;
+package uz.app.jsp.Table.Tags.model;
 
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import uz.app.jsp.Table.Util;
 

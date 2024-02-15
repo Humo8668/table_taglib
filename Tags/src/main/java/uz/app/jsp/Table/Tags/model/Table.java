@@ -1,4 +1,4 @@
-package uz.app.jsp.Table.Tags;
+package uz.app.jsp.Table.Tags.model;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -14,6 +14,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import uz.app.jsp.Table.DataStore;
+import uz.app.jsp.Table.Tags.DefaultDataStore;
 
 public class Table {
     private List<Column> columns;
