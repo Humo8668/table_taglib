@@ -1,4 +1,4 @@
-package uz.app.jsp.Table.Tags.model;
+package uz.app.jsp.Table.Tags;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

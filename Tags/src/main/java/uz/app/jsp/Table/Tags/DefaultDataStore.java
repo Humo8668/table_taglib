@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import uz.app.jsp.Table.DataStore;
-import uz.app.jsp.Table.Tags.model.Filter;
-import uz.app.jsp.Table.Tags.model.Filter.Type;
+import uz.app.jsp.Table.Tags.Filter.Type;
 
 class DefaultDataStore implements DataStore {
     List<Map<String, Object>> rows;
