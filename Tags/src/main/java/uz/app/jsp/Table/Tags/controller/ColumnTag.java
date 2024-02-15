@@ -1,7 +1,9 @@
-package uz.app.jsp.Table.Tags;
+package uz.app.jsp.Table.Tags.controller;
 
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.TagSupport;
+
+import uz.app.jsp.Table.Tags.model.*;
 
 
 public class ColumnTag extends TagSupport {
